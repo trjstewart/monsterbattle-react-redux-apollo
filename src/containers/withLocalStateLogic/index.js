@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 
 import monsterList from '../../lib/monsters'
 import {
-  // calcDamage,
+  calcDamage,
   shuffle
 } from '../../lib/utils'
 
@@ -35,13 +35,39 @@ const withLocalStateLogic = Board => {
     selectMonster2 = monster2 =>
       this.setState({monster2: findMonster(monster2)}, this.reset)
 
-    startBattle = () => {}
+    startBattle = () => this.setState({battleStarted: true}, this.reset)
 
-    monster1Attack = () => {}
+    monster1Attack = () => {
+      const { turns, monster1, monster2, monster2Health } = this.state
+      const damage = calcDamage(monster1, monster2)
+      const newHealth = Math.max(monster2Health - damage, 0)
+      this.setState({
+        turns: [ ...turns, { damage, attacker: monster1.name, defender: monster2.name }],
+        monster2Health: newHealth,
+        battleStarted: newHealth > 0
+      })
+    }
 
-    monster2Attack = () => {}
+    monster2Attack = () => {
+      const { turns, monster1, monster2, monster1Health } = this.state
+      const damage = calcDamage(monster2, monster1)
+      const newHealth = Math.max(monster1Health - damage, 0)
+      this.setState({
+        turns: [ ...turns, { damage, attacker: monster2.name, defender: monster1.name }],
+        monster1Health: newHealth,
+        battleStarted: newHealth > 0
+      })
+    }
 
-    actionMethod = () => {}
+    actionMethod = () => {
+      const { battleStarted, turns } = this.state
+
+      return battleStarted
+        ? turns.length % 2
+          ? this.monster1Attack
+          : this.monster2Attack
+        : this.startBattle
+    }
 
     render() {
       const {
